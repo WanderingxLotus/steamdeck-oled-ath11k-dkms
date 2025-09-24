@@ -58,13 +58,13 @@ sudo ./install.sh
 - `Unexpected Regulatory event for this wiphy` – harmless
 
 ## Known Issue: Restarting on Wakeup
-As a workaround, use this:
+As a workaround use this:
 ```sudo modprobe -r ath11k_pci ath11k
 # Suspend here (close lid)
 # After wake:
 sudo modprobe ath11k_pci
-sudo systemctl start NetworkManager```
-
+sudo systemctl start NetworkManager
+```
 
 ## Disabled
 - `testmode.o` (cfg80211 testmode APIs absent in SteamOS 6.11 base)
