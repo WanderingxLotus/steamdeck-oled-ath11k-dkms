@@ -62,6 +62,15 @@ sudo ./install.sh
 
 See `BACKPORT_NOTES.md` for the technical delta.
 
+
+##Known Issue: Restarting on Wakeup
+As a workaround, use this:
+```sudo modprobe -r ath11k_pci ath11k
+# Suspend here (close lid)
+# After wake:
+sudo modprobe ath11k_pci
+sudo systemctl start NetworkManager
+
 ## License
 Driver source: original upstream Linux licensing (GPLv2). See LICENSE.
 Firmware (if included): governed by vendor license; review WHENCE before redistribution.
