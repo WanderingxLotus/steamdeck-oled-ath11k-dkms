@@ -46,7 +46,7 @@ sudo dkms remove ath11k-steamos/6.16-custom --all
 ```
 
 ## Firmware
-If you do **not** ship `board-2.bin`, instruct users to extract it:
+If you do **not** ship `board-2.bin`,extract it:
 ```bash
 git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 cp linux-firmware/ath11k/QCA2066/hw2.1/board-2.bin firmware/QCA2066/
@@ -57,19 +57,20 @@ sudo ./install.sh
 - `ath11k: loading out-of-tree module taints kernel.` – normal for DKMS
 - `Unexpected Regulatory event for this wiphy` – harmless
 
-## Disabled
-- `testmode.o` (cfg80211 testmode APIs absent in SteamOS 6.11 base)
-
-See `BACKPORT_NOTES.md` for the technical delta.
-
-
-##Known Issue: Restarting on Wakeup
+## Known Issue: Restarting on Wakeup
 As a workaround, use this:
 ```sudo modprobe -r ath11k_pci ath11k
 # Suspend here (close lid)
 # After wake:
 sudo modprobe ath11k_pci
-sudo systemctl start NetworkManager
+sudo systemctl start NetworkManager```
+
+
+## Disabled
+- `testmode.o` (cfg80211 testmode APIs absent in SteamOS 6.11 base)
+
+See `BACKPORT_NOTES.md` for the technical delta.
+
 
 ## License
 Driver source: original upstream Linux licensing (GPLv2). See LICENSE.
