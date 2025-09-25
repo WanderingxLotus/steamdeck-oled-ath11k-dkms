@@ -9,19 +9,37 @@ Persistent out-of-tree ath11k (QCA2066) driver package for SteamOS / Arch (Steam
 - Includes required shared headers (`spectral_common.h`, `testmode_i.h`)
 - Optional auto firmware installer
 
-## Quick Install
+## Installation (Any Linux User)
 
 ```bash
-git clone https://github.com/WanderingxLotus/steamdeck-ath11k-dkms.git
-cd steamdeck-ath11k-dkms
+# 1. Install DKMS and kernel headers
+# SteamOS/Arch:
+sudo pacman -S dkms linux-headers
+# Debian/Ubuntu:
+# sudo apt install dkms linux-headers-$(uname -r)
 
-# (Optional) Fetch board-2.bin if not committed:
-./scripts/fetch_board_file.sh   # (create this if you choose not to ship the blob)
+# 2. Extract the DKMS driver package
+tar xvf ath11k-steamos-dkms-6.16-custom.tar.gz
+cd ath11k-dkms
 
-sudo pacman -S dkms
+# 3. Register and build
 sudo dkms add .
 sudo dkms install ath11k-steamos/6.16-custom
 
+# 4. Install firmware (board-2.bin)
+# If firmware/QCA2066/board-2.bin is missing, fetch manually:
+git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+cp linux-firmware/ath11k/QCA2066/hw2.1/board-2.bin firmware/QCA2066/
+sudo ./install.sh
+
+# 5. Reload driver
+sudo modprobe -r ath11k_pci ath11k || true
+sudo modprobe ath11k_pci
+
+# 6. Verify driver
+modinfo ath11k_pci | grep filename
+dmesg | grep -i ath11k | tail
+```
 # Install firmware (if provided or fetched)
 sudo ./install.sh
 
