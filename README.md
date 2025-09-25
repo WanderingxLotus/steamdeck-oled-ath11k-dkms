@@ -9,7 +9,7 @@ Persistent out-of-tree ath11k (QCA2066) driver package for SteamOS / Arch (Steam
 - Includes required shared headers (`spectral_common.h`, `testmode_i.h`)
 - Optional auto firmware installer
 
-## Installation (Any Linux User)
+## Installation
 
 ```bash
 # 1. Install DKMS and kernel headers
@@ -38,13 +38,6 @@ sudo modprobe ath11k_pci
 
 # 6. Verify driver
 modinfo ath11k_pci | grep filename
-dmesg | grep -i ath11k | tail
-```
-# Install firmware (if provided or fetched)
-sudo ./install.sh
-
-sudo modprobe -r ath11k_pci ath11k 2>/dev/null || true
-sudo modprobe ath11k_pci
 dmesg | grep -i ath11k | tail
 ```
 
