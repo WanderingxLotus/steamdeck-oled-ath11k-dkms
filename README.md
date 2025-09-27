@@ -69,7 +69,7 @@ sudo ./install.sh
 - `Unexpected Regulatory event for this wiphy` – harmless
 
 ## Known Issue: Restarting on Wakeup
-As a workaround use this:
+As a workaround use the following and create a system servic:
 ```sudo modprobe -r ath11k_pci ath11k
 # Suspend here (close lid)
 # After wake:
