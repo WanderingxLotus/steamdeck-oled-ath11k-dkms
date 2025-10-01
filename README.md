@@ -13,23 +13,54 @@ Persistent out-of-tree ath11k (QCA2066) driver package for SteamOS / Arch (Steam
 
 These instructions assume you are brand new to Linux and using your Steam Deck in Desktop Mode.
 
-**Before you begin:**  
-- Make sure you are in Desktop Mode (not Gaming Mode).
-- Open the Konsole app (search for "Konsole" in the Steam Deck menu).
+---
+
+### **Before You Begin**
+
+- **Switch to Desktop Mode:**  
+  Press the Steam button → Power → Switch to Desktop.
+
+- **Open the Konsole app:**  
+  Click the Application Launcher (bottom left corner), search for "Konsole", and open it.  
+  The Konsole window is where you will copy and paste all the commands below.
+
+- **What is a terminal/Konsole?**  
+  The terminal (called "Konsole" on Steam Deck) is a special program for typing and running commands on your computer.  
+  You will see a prompt ending with `$` or `deck@steamdeck ~)$`.
 
 ---
 
-### **Step 1: Make your system writable**
+### **Understanding Your File System**
+
+- Your files are organized in "folders" (also called "directories").
+- The **Home folder** is where your personal files and downloads are.  
+  When you open Konsole, you start in your Home folder.  
+  You'll see this as `~` or `/home/deck` in the prompt.
+- The **Downloads folder** is `/home/deck/Downloads`.
+
+---
+
+### **What Does "cd" Mean?**
+
+- `cd` stands for "change directory" (move into a folder).
+- Example:  
+  `cd ~/Downloads` moves you into your Downloads folder.
+
+---
+
+### **Step 1: Make Your System Writable**
 
 SteamOS protects system files by default. You need to unlock it:
 
 ```bash
 sudo steamos-readonly disable
 ```
+> When prompted for a password, type it and press Enter.  
+> If you never set a password, just press Enter.
 
 ---
 
-### **Step 2: Initialize the package manager (first time only)**
+### **Step 2: Initialize the Package Manager (First Time Only)**
 
 If you've never installed packages before, run:
 
@@ -41,7 +72,7 @@ sudo pacman-key --populate archlinux
 
 ---
 
-### **Step 3: Trust the SteamOS package signing key**
+### **Step 3: Trust the SteamOS Package Signing Key**
 
 ```bash
 sudo pacman-key --recv-key AF1D2199EF0A3CCF
@@ -50,38 +81,56 @@ sudo pacman-key --lsign-key AF1D2199EF0A3CCF
 
 ---
 
-### **Step 4: Install DKMS and kernel headers**
+### **Step 4: Find Your Kernel Version**
 
-**You must install DKMS and the headers that match your kernel version.**
-
-To check your kernel version, run:
+Run:
 
 ```bash
 uname -r
 ```
+> Copy the output. It will look like `6.11.11-valve24-2-neptune-611-gfd0dd251480d`.
 
-Then install DKMS and the correct headers (replace `linux-neptune-611-headers` with the package matching your kernel version from the previous command):
+---
+
+### **Step 5: Install DKMS and Kernel Headers**
+
+You must install DKMS and headers that match your kernel version.
+
+Replace `linux-neptune-611-headers` with the package that matches your kernel version from Step 4.  
+For example, if your kernel is `6.11.11-valve24-2-neptune-611-gfd0dd251480d`, you want `linux-neptune-611-headers`.
 
 ```bash
 sudo pacman -S dkms linux-neptune-611-headers
 ```
-
-If you are on Arch, it may be called `linux-headers` instead.
+> If you get an error that the package does not exist, ask for help in the Steam Deck community.
 
 ---
 
-### **Step 5: Extract the driver package**
+### **Step 6: Locate and Extract the Driver Package**
 
-Navigate to your downloads folder, or wherever the driver package is located, then run:
+- If you downloaded the driver package (example: `ath11k-steamos-dkms-6.16-custom.tar.gz`), it will be in your **Downloads folder**.
+
+First, move into your Downloads folder:
+
+```bash
+cd ~/Downloads
+```
+
+Extract the driver package:
 
 ```bash
 tar xvf ath11k-steamos-dkms-6.16-custom.tar.gz
-cd ath11k-dkms
+```
+
+Move into the extracted folder (replace with your actual folder name if different):
+
+```bash
+cd steamdeck-oled-ath11k-dkms
 ```
 
 ---
 
-### **Step 6: Register and install the DKMS module**
+### **Step 7: Register and Install the DKMS Module**
 
 ```bash
 sudo dkms add .
@@ -90,19 +139,21 @@ sudo dkms install ath11k-steamos/6.16-custom
 
 ---
 
-### **Step 7: Install the firmware (board-2.bin)**
+### **Step 8: Install the Firmware (board-2.bin)**
 
-If you do not have the firmware file (`firmware/QCA2066/board-2.bin`), download and install it:
+If you do not have the file `firmware/QCA2066/board-2.bin`, run:
 
 ```bash
 git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 cp linux-firmware/ath11k/QCA2066/hw2.1/board-2.bin firmware/QCA2066/
 sudo ./install.sh
 ```
+> If you see "command not found" for `git`, install it with  
+> `sudo pacman -S git`
 
 ---
 
-### **Step 8: Reload the driver**
+### **Step 9: Reload the Driver**
 
 ```bash
 sudo modprobe -r ath11k_pci ath11k || true
@@ -111,16 +162,17 @@ sudo modprobe ath11k_pci
 
 ---
 
-### **Step 9: Verify the driver is installed**
+### **Step 10: Verify the Custom Driver is Loaded**
 
 ```bash
 modinfo ath11k_pci | grep filename
 ```
-You should see a path like `/updates/dkms/ath11k_pci.ko.zst`.
+You should see a path ending in `/updates/dkms/ath11k_pci.ko.zst`.  
+If so, your custom driver is in use.
 
 ---
 
-### **Step 10: Check dmesg for driver status**
+### **Step 11: Check Driver Logs (optional, for troubleshooting)**
 
 ```bash
 sudo dmesg | grep -i ath11k | tail
@@ -128,19 +180,30 @@ sudo dmesg | grep -i ath11k | tail
 
 ---
 
-**You're done! Your custom ath11k driver is installed and running. If you reboot or update your kernel, repeat steps 4, 6, 8, and 9.**
+### **You’re Done!**
+
+Your custom ath11k driver is installed and running.
+
+- If you update your kernel or SteamOS, repeat Steps 4, 5, 7, and 9.
 
 ---
 
-### **Troubleshooting**
+### **Troubleshooting Tips**
 
-- If you see errors about missing kernel headers, make sure you installed the package matching your kernel version (`uname -r`).
-- If you see package signature errors, repeat Steps 2 & 3.
-- For SteamOS updates, repeat these steps after updating.
+- **Missing kernel headers?**  
+  Run Step 4 and make sure the headers package matches your kernel.
+- **Signature errors?**  
+  Repeat Steps 2 & 3.
+- **Can't find files/folders?**  
+  Double-check you are in the correct directory (use `pwd` to see your current folder).
+- **Any error?**  
+  Copy and paste the error message into Google or ask in the Steam Deck forums or GitHub issues.
 
 ---
 
-**For further help, ask in the Steam Deck community or open an issue in this repository!**
+### **Need More Help?**
+
+Ask in the Steam Deck community or open an issue in this repository!
 
 ## Updating
 1. Apply patches / refresh upstream snapshot (see `scripts/collect_upstream.sh`).
