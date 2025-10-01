@@ -238,124 +238,152 @@ sudo ./install.sh
 
 ---
 
-### **Automatically Reload WiFi Driver After Sleep (Suspend/Resume)**
-
-If your Steam Deck loses WiFi or resets after waking up, you can automate reloading the ath11k driver:
-
-#### **Step 1: Create the Reload Script**
-
-Open Konsole and run:
-```bash
-cd ~
-nano reload-ath11k.sh
-```
-Paste this into nano:
-```bash
-#!/bin/bash
-sudo modprobe -r ath11k_pci ath11k
-sleep 1
-sudo modprobe ath11k_pci
-sudo systemctl start NetworkManager
-```
-Press `Ctrl+O` to save, `Enter`, then `Ctrl+X` to exit.
-
-Make it executable:
-```bash
-chmod +x ~/reload-ath11k.sh
-```
-
-#### **Step 2: Create the Systemd Service**
-
-```bash
-sudo nano /etc/systemd/system/reload-ath11k.service
-```
-Paste:
-```
-[Unit]
-Description=Reload ath11k WiFi driver after resume
-After=suspend.target
-
-[Service]
-Type=oneshot
-ExecStart=/home/deck/reload-ath11k.sh
-
-[Install]
-WantedBy=suspend.target
-```
-Save and exit.
-
-#### **Step 3: Enable the Service**
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable reload-ath11k.service
-```
-
-Your WiFi driver will now reload automatically after sleep/wake!
+## Permanent Fixes for Suspend/Resume Issues
 
 ---
 
-### **Automatically Close Moonlight on Sleep/Wake**
+### **How to Remove Old or Broken Services (Clean Up)**
 
-If you want Moonlight to close automatically when you suspend or resume your Steam Deck:
+If you previously created workaround services or scripts (for WiFi, Moonlight, etc.), here’s how to safely remove them before setting up the new fixed versions:
 
-#### **Step 1: Create the Close Moonlight Script**
-
+**Remove systemd services:**
 ```bash
-cd ~
-nano close-moonlight.sh
-```
-Paste:
-```bash
-#!/bin/bash
-pkill moonlight
-```
-Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
-Make it executable:
-```bash
-chmod +x ~/close-moonlight.sh
-```
-
-#### **Step 2: Create the Systemd Service**
-
-```bash
-sudo nano /etc/systemd/system/close-moonlight.service
-```
-Paste:
-```
-[Unit]
-Description=Close Moonlight on suspend and resume
-After=suspend.target
-
-[Service]
-Type=oneshot
-ExecStart=/home/deck/close-moonlight.sh
-
-[Install]
-WantedBy=suspend.target
-WantedBy=resume.target
-```
-Save and exit.
-
-#### **Step 3: Enable the Service**
-
-```bash
+sudo systemctl disable reload-ath11k.service
+sudo systemctl disable close-moonlight.service
+sudo rm /etc/systemd/system/reload-ath11k.service
+sudo rm /etc/systemd/system/close-moonlight.service
 sudo systemctl daemon-reload
-sudo systemctl enable close-moonlight.service
 ```
 
-Moonlight will now close automatically every time your Deck suspends or resumes.
+**Remove custom sleep hook scripts:**
+```bash
+sudo rm /usr/lib/systemd/system-sleep/reload-ath11k
+sudo rm /usr/lib/systemd/system-sleep/close-moonlight
+```
 
+**Remove lid suspend block config (if you created it):**
+```bash
+sudo rm /etc/systemd/logind.conf.d/ignore-lid.conf
+sudo systemctl restart systemd-logind
+```
+
+**Remove any leftover scripts from your home folder:**
+```bash
+rm ~/reload-ath11k.sh
+rm ~/close-moonlight.sh
+```
+
+**Reboot to apply all changes:**
+```bash
+systemctl reboot
+```
+
+---
+
+### **Set Up Fixed Working Services for Suspend/Resume**
+
+#### **Automatically Reload WiFi Driver After Sleep (Suspend/Resume)**
+
+1. **Create the reload script:**
+    ```bash
+    cd ~
+    nano reload-ath11k.sh
+    ```
+    Paste:
+    ```bash
+    #!/bin/bash
+    sudo modprobe -r ath11k_pci ath11k
+    sleep 1
+    sudo modprobe ath11k_pci
+    sudo systemctl start NetworkManager
+    ```
+    Save (`Ctrl+O`, `Enter`, `Ctrl+X`) and make executable:
+    ```bash
+    chmod +x ~/reload-ath11k.sh
+    ```
+
+2. **Create the systemd service:**
+    ```bash
+    sudo nano /etc/systemd/system/reload-ath11k.service
+    ```
+    Paste:
+    ```
+    [Unit]
+    Description=Reload ath11k WiFi driver after resume
+    After=suspend.target
+
+    [Service]
+    Type=oneshot
+    ExecStart=/home/deck/reload-ath11k.sh
+
+    [Install]
+    WantedBy=suspend.target
+    ```
+    Save and exit.
+
+3. **Enable the service:**
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable reload-ath11k.service
+    ```
+
+---
+
+#### **Automatically Close Moonlight on Sleep/Wake**
+
+1. **Create the close script:**
+    ```bash
+    cd ~
+    nano close-moonlight.sh
+    ```
+    Paste:
+    ```bash
+    #!/bin/bash
+    pkill moonlight
+    ```
+    Save (`Ctrl+O`, `Enter`, `Ctrl+X`) and make executable:
+    ```bash
+    chmod +x ~/close-moonlight.sh
+    ```
+
+2. **Create the systemd service:**
+    ```bash
+    sudo nano /etc/systemd/system/close-moonlight.service
+    ```
+    Paste:
+    ```
+    [Unit]
+    Description=Close Moonlight on suspend and resume
+    After=suspend.target
+
+    [Service]
+    Type=oneshot
+    ExecStart=/home/deck/close-moonlight.sh
+
+    [Install]
+    WantedBy=suspend.target
+    ```
+    Save and exit.
+
+3. **Enable the service:**
+    ```bash
+    sudo systemctl daemon-reload
+    sudo systemctl enable close-moonlight.service
+    ```
+
+---
+
+**Check status anytime:**
+```bash
+sudo systemctl status reload-ath11k.service
+sudo systemctl status close-moonlight.service
+```
 ---
 
 **Notes:**
-- If your username is not `deck`, replace `/home/deck/` with your actual home directory in the above scripts and service files.
-- You can check the status of these services with:
-  ```bash
-  sudo systemctl status reload-ath11k.service
-  sudo systemctl status close-moonlight.service
-  ```
+- If your user is not `deck`, replace `/home/deck/` with your actual home directory.
+- These services now reliably run after suspend (sleep/wake) and can be easily removed or edited using the above commands.
+
 ---
 
 ## License
