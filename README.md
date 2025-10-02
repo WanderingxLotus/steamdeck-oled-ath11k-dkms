@@ -1,48 +1,49 @@
 # SteamDeck / SteamOS ath11k DKMS (QCA2066)
 
-This package lets you use a custom WiFi driver for your Steam Deck or SteamOS device with QCA2066 hardware. It includes up-to-date kernel code, auto-rebuilds after updates, and fixes common Steam Deck WiFi issues.
+This package gives you a custom WiFi driver for your Steam Deck or SteamOS device, based on the latest Linux sources. It supports the QCA2066 chip found in the OLED Steam Deck. The driver auto-rebuilds with kernel updates, uses the newest firmware, and includes fixes for sleep/wake WiFi issues.
 
 ---
 
 ## Features
 
-- Stays working after SteamOS/kernel updates (DKMS)
-- Newer firmware for better stability and compatibility
+- DKMS support (driver survives kernel/SteamOS updates)
+- Improved firmware compatibility and performance
 - Removes unsupported/test features
-- Simple install with a provided tarball
-- Sleep/wake WiFi fixes available
+- Easy install via tarball release
+- Modern suspend/resume workaround for WiFi issues
 
 ---
 
 ## What You’ll Need
 
-- Steam Deck (or SteamOS device) in Desktop Mode
-- The pre-release tarball from [Releases](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases) (`ath11k-steamos-dkms-6.16-custom.tar.gz`)
-- Basic internet (to download firmware if needed)
-- Konsole app (the terminal)
+- Steam Deck (or SteamOS device), switched to Desktop Mode
+- The latest tarball from [Releases](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases)
+- Internet (for firmware download if needed)
+- Konsole (the terminal app)
 - About 20 minutes and patience
 
 ---
 
-## Installation (Step-by-Step)
+## Installation Steps
 
 ### **Step 1: Download the Tarball**
 
-Go to the [Releases page](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases) and download the latest tarball:  
-`ath11k-steamos-dkms-6.16-custom.tar.gz`
-
-It will be in your **Downloads folder**:
+Visit the [Releases page](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases) and download:
+```
+ath11k-steamos-dkms-6.16-custom.tar.gz
+```
+It will be in your **Downloads** folder:
 ```
 /home/deck/Downloads
 ```
 
 ---
 
-### **Step 2: Open Konsole (Terminal)**
+### **Step 2: Open Konsole**
 
 - Press the Steam button
 - Go to Power > Switch to Desktop
-- Click the start menu (bottom left), search for "Konsole", and open it
+- Open the start menu (bottom left), search "Konsole", and launch it
 
 ---
 
@@ -51,11 +52,11 @@ It will be in your **Downloads folder**:
 ```bash
 sudo steamos-readonly disable
 ```
-If prompted for a password, type it and press Enter (or just press Enter).
+If prompted for a password, type it and press Enter (if you never set one, just press Enter).
 
 ---
 
-### **Step 4: (First Time Only) Setup the Package Manager**
+### **Step 4: (First Time Only) Prepare the Package Manager**
 
 ```bash
 sudo rm -rf /etc/pacman.d/gnupg
@@ -79,14 +80,14 @@ sudo pacman-key --lsign-key AF1D2199EF0A3CCF
 ```bash
 uname -r
 ```
-It will look like:  
+Example output:  
 `6.11.11-valve24-2-neptune-611-gfd0dd251480d`
 
 ---
 
 ### **Step 7: Install DKMS and Kernel Headers**
 
-Replace `linux-neptune-611-headers` with the package matching your kernel version from step 6.
+Replace `linux-neptune-611-headers` with the package matching your kernel version.
 
 ```bash
 sudo pacman -S dkms linux-neptune-611-headers
@@ -114,7 +115,7 @@ Go into the new folder:
 ```bash
 cd steamdeck-oled-ath11k-dkms
 ```
-(Type `ls` to see the folder name if it’s different.)
+(Type `ls` to check the folder name if needed.)
 
 ---
 
@@ -168,7 +169,7 @@ This means your custom DKMS driver is loaded.
 ```bash
 sudo dmesg | grep -i ath11k | tail
 ```
-No errors? You’re set!
+If there are no errors, you’re done!
 
 ---
 
@@ -191,102 +192,62 @@ sudo dkms remove ath11k-steamos/6.16-custom --all
 
 ---
 
-## Advanced: Fix WiFi After Sleep/Wake
+## Suspend/Resume Workaround (Recommended)
 
-If your WiFi stops working after sleep/wake, you can set up a script to reload the driver automatically.
+This script automatically unloads and reloads the WiFi driver when your Deck sleeps/wakes (instead of the previous workaround).  
+**It fixes WiFi and prevents full system reboot issues on sleep/wake.**
 
-### **Remove Old Services and Scripts**
+### **Step 1: Add the system-sleep script**
 
-Run these commands to clean up anything from old guides:
-
-```bash
-sudo systemctl disable reload-ath11k.service
-sudo systemctl disable close-moonlight.service
-sudo rm /etc/systemd/system/reload-ath11k.service
-sudo rm /etc/systemd/system/close-moonlight.service
-sudo systemctl daemon-reload
-sudo rm /usr/lib/systemd/system-sleep/reload-ath11k
-sudo rm /usr/lib/systemd/system-sleep/close-moonlight
-sudo rm /etc/systemd/logind.conf.d/ignore-lid.conf
-sudo systemctl restart systemd-logind
-rm ~/reload-ath11k.sh
-rm ~/close-moonlight.sh
-systemctl reboot
-```
-
----
-
-### **Set Up Automatic WiFi Driver Reload (Systemd Sleep Hook)**
-
-#### 1. Make the reload script
+Open Konsole and run:
 
 ```bash
-cd ~
-nano reload-ath11k.sh
+sudo nano /usr/lib/systemd/system-sleep/ath11k-reload
 ```
-Paste:
+
+Paste this in:
+
 ```bash
 #!/bin/bash
-sudo modprobe -r ath11k_pci ath11k
-sleep 1
-sudo modprobe ath11k_pci
-sudo systemctl start NetworkManager
+case $1 in
+  pre)
+    logger "system-sleep: Unloading ath11k_pci before suspend"
+    modprobe -r ath11k_pci
+    ;;
+  post)
+    logger "system-sleep: Reloading ath11k_pci after resume"
+    modprobe ath11k_pci
+    ;;
+esac
 ```
-Save with `Ctrl+O`, `Enter`, `Ctrl+X`.  
+
+Save (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
 Make it executable:
 
 ```bash
-chmod +x ~/reload-ath11k.sh
-```
-
-#### 2. Add the systemd sleep hook
-
-```bash
-sudo nano /usr/lib/systemd/system-sleep/reload-ath11k
-```
-Paste:
-```bash
-#!/bin/bash
-/home/deck/reload-ath11k.sh
-```
-Save and make executable:
-```bash
-sudo chmod +x /usr/lib/systemd/system-sleep/reload-ath11k
+sudo chmod +x /usr/lib/systemd/system-sleep/ath11k-reload
 ```
 
 ---
 
-## Extra: Automatically Close Moonlight on Sleep/Wake
+**No other workaround scripts or systemd services are needed!  
+Systemd will run this script automatically every time you suspend or resume.**
 
-#### 1. Make the close script
+---
 
-```bash
-cd ~
-nano close-moonlight.sh
-```
-Paste:
-```bash
-#!/bin/bash
-pkill moonlight
-```
-Save and make executable:
-```bash
-chmod +x ~/close-moonlight.sh
-```
+### **How to Check if It's Working**
 
-#### 2. Add the sleep hook
+Check for log messages:
 
 ```bash
-sudo nano /usr/lib/systemd/system-sleep/close-moonlight
+journalctl | grep system-sleep
 ```
-Paste:
-```bash
-#!/bin/bash
-/home/deck/close-moonlight.sh
+
+You should see lines like:
 ```
-Save and make executable:
-```bash
-sudo chmod +x /usr/lib/systemd/system-sleep/close-moonlight
+system-sleep: Unloading ath11k_pci before suspend
+system-sleep: Reloading ath11k_pci after resume
 ```
 
 ---
@@ -304,7 +265,7 @@ filename: /lib/modules/<kernel-version>/updates/dkms/ath11k_pci.ko.zst
 ```
 If so, your custom DKMS driver is active!
 
-To double-check:
+Double-check with:
 
 ```bash
 sudo dmesg | grep -i ath11k | tail
@@ -316,4 +277,10 @@ dkms status
 ## License
 
 Driver source: original upstream Linux GPLv2. See LICENSE.  
-Firmware (if included): vendor license; review WHENCE before redistribution 
+Firmware (if included): vendor license; review WHENCE before redistribution.
+
+---
+
+## Need Help?
+
+If you get stuck, ask in the Steam Deck community or open an issue here!
