@@ -24,6 +24,22 @@ This package gives you a custom WiFi driver for your Steam Deck or SteamOS devic
 
 ---
 
+## Kernel & Upstream Driver Version
+
+**This DKMS driver is based on upstream Linux kernel version 6.16.7 — commit [`131e2001572b`](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=131e2001572b).**
+
+All `ath11k` source files in this package were compared against the official Linux 6.16.7 tree.  
+**This repo contains compatibility and stability patches for the Steam Deck kernel (Valve’s 6.11.x), including:**
+- Memory ordering fixes (`dma_rmb()`)
+- Kernel API compatibility (timer macros, struct members, function args)
+- Removal of new features not present on 6.11.x, and adaptation for hardware
+- Minor bugfixes for Steam Deck platform
+
+**In summary:**  
+The base driver is Linux 6.16.7, but this DKMS package is not a vanilla copy—it contains targeted backports and patches for Steam Deck and SteamOS.
+
+---
+
 ## Installation Steps
 
 ### **Step 1: Download the Tarball**
@@ -192,10 +208,9 @@ sudo dkms remove ath11k-steamos/6.16-custom --all
 
 ---
 
-## Suspend/Resume Workaround (Recommended)
+## Modern Suspend/Resume Workaround (Recommended)
 
-This script automatically unloads and reloads the WiFi driver when your Deck sleeps/wakes (instead of the previous workaround).  
-**It fixes WiFi and prevents full system reboot issues on sleep/wake.**
+If your WiFi drops or fails after sleep/wake, use this script to automatically unload and reload the driver, fixing Steam Deck reboot/wake issues.
 
 ### **Step 1: Add the system-sleep script**
 
@@ -205,7 +220,7 @@ Open Konsole and run:
 sudo nano /usr/lib/systemd/system-sleep/ath11k-reload
 ```
 
-Paste this in:
+Paste in:
 
 ```bash
 #!/bin/bash
@@ -238,7 +253,7 @@ Systemd will run this script automatically every time you suspend or resume.**
 
 ### **How to Check if It's Working**
 
-Check for log messages:
+After suspending and waking your Deck, check for log messages:
 
 ```bash
 journalctl | grep system-sleep
@@ -278,9 +293,3 @@ dkms status
 
 Driver source: original upstream Linux GPLv2. See LICENSE.  
 Firmware (if included): vendor license; review WHENCE before redistribution.
-
----
-
-## Need Help?
-
-If you get stuck, ask in the Steam Deck community or open an issue here!
