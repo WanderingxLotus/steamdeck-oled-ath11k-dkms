@@ -1,295 +1,178 @@
-# SteamDeck / SteamOS ath11k DKMS (QCA2066)
+# Steam Deck OLED ath11k Wi-Fi Driver DKMS Installer
 
-This package gives you a custom WiFi driver for your Steam Deck or SteamOS device, based on the latest Linux sources. It supports the QCA2066 chip found in the OLED Steam Deck. The driver auto-rebuilds with kernel updates, uses the newest firmware, and includes fixes for sleep/wake WiFi issues.
-
----
-
-## Features
-
-- DKMS support (driver survives kernel/SteamOS updates)
-- Improved firmware compatibility and performance
-- Removes unsupported/test features
-- Easy install via tarball release
-- Modern suspend/resume workaround for WiFi issues
+This guide will walk you through installing the **ath11k Wi-Fi driver** for Steam Deck OLED on SteamOS or any compatible Linux.  
+**No prior Linux experience needed—just follow the steps and copy/paste the commands.**
 
 ---
 
-## What You’ll Need
+## Table of Contents
 
-- Steam Deck (or SteamOS device), switched to Desktop Mode
-- The latest tarball from [Releases](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases)
-- Internet (for firmware download if needed)
-- Konsole (the terminal app)
-- About 20 minutes and patience
-
----
-
-## Kernel & Upstream Driver Version
-
-**This DKMS driver is based on upstream Linux kernel version 6.16.7 — commit [`131e2001572b`](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=131e2001572b).**
-
-All `ath11k` source files in this package were compared against the official Linux 6.16.7 tree.  
-**This repo contains compatibility and stability patches for the Steam Deck kernel (Valve’s 6.11.x), including:**
-- Memory ordering fixes (`dma_rmb()`)
-- Kernel API compatibility (timer macros, struct members, function args)
-- Removal of new features not present on 6.11.x, and adaptation for hardware
-- Minor bugfixes for Steam Deck platform
-
-**In summary:**  
-The base driver is Linux 6.16.7, but this DKMS package is not a vanilla copy—it contains targeted backports and patches for Steam Deck and SteamOS.
+1. [What is this?](#what-is-this)
+2. [What you need](#what-you-need)
+3. [Step 1: Prepare your Steam Deck](#step-1-prepare-your-steam-deck)
+4. [Step 2: Download the driver](#step-2-download-the-driver)
+5. [Step 3: Install the driver](#step-3-install-the-driver)
+6. [Step 4: Install the Wi-Fi firmware](#step-4-install-the-wi-fi-firmware)
+7. [Step 5: Enable the driver](#step-5-enable-the-driver)
+8. [Troubleshooting](#troubleshooting)
+9. [Uninstalling](#uninstalling)
+10. [FAQ](#faq)
+11. [Credits](#credits)
 
 ---
 
-## Installation Steps
+## What is this?
 
-### **Step 1: Download the Tarball**
-
-Visit the [Releases page](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases) and download:
-```
-ath11k-steamos-dkms-6.16-custom.tar.gz
-```
-It will be in your **Downloads** folder:
-```
-/home/deck/Downloads
-```
+This project provides an **updated Wi-Fi driver** (ath11k) and firmware for the Steam Deck OLED (QCA2066 chip).  
+It fixes issues with sleep/wake, improves reliability, and makes Wi-Fi work on SteamOS after updates.
 
 ---
 
-### **Step 2: Open Konsole**
+## What you need
 
-- Press the Steam button
-- Go to Power > Switch to Desktop
-- Open the start menu (bottom left), search "Konsole", and launch it
-
----
-
-### **Step 3: Make Your System Writable**
-
-```bash
-sudo steamos-readonly disable
-```
-If prompted for a password, type it and press Enter (if you never set one, just press Enter).
+- Steam Deck OLED (or compatible device)
+- SteamOS or Linux (Desktop Mode)
+- Internet access (for downloading files)
+- **Terminal/Konsole** (find it in Desktop Mode)
+- Your administrator password (Steam Deck default password is usually set during setup)
 
 ---
 
-### **Step 4: (First Time Only) Prepare the Package Manager**
+## Step 1: Prepare your Steam Deck
 
-```bash
-sudo rm -rf /etc/pacman.d/gnupg
-sudo pacman-key --init
-sudo pacman-key --populate archlinux
-```
+1. **Switch to Desktop Mode:**  
+   - Press the Steam button, go to Power > Switch to Desktop.
 
----
-
-### **Step 5: (First Time Only) Add the Package Signing Key**
-
-```bash
-sudo pacman-key --recv-key AF1D2199EF0A3CCF
-sudo pacman-key --lsign-key AF1D2199EF0A3CCF
-```
+2. **Open the Terminal:**  
+   - Find "Konsole" or "Terminal" in your app launcher.
 
 ---
 
-### **Step 6: Find Your Kernel Version**
+## Step 2: Download the driver
 
-```bash
-uname -r
-```
-Example output:  
-`6.11.11-valve24-2-neptune-611-gfd0dd251480d`
+1. **Go to your Downloads folder:**  
+   ```bash
+   cd ~/Downloads
+   ```
 
----
-
-### **Step 7: Install DKMS and Kernel Headers**
-
-Replace `linux-neptune-611-headers` with the package matching your kernel version.
-
-```bash
-sudo pacman -S dkms linux-neptune-611-headers
-```
-If you get an error, ask for help in the Steam Deck community.
+2. **Download the driver repository:**  
+   ```bash
+   git clone https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms.git
+   cd steamdeck-oled-ath11k-dkms
+   ```
 
 ---
 
-### **Step 8: Extract the Tarball**
+## Step 3: Install the driver with DKMS
 
-Go to your Downloads folder:
+1. **Make the installer script executable:**  
+   ```bash
+   chmod +x dkms-post-install.sh
+   ```
 
-```bash
-cd ~/Downloads
-```
+2. **Install the driver using DKMS:**  
+   ```bash
+   sudo dkms add .
+   sudo dkms install steamdeck-oled-ath11k-dkms/6.16-custom
+   ```
 
-Extract the tarball:
-
-```bash
-tar xvf ath11k-steamos-dkms-6.16-custom.tar.gz
-```
-
-Go into the new folder:
-
-```bash
-cd steamdeck-oled-ath11k-dkms
-```
-(Type `ls` to check the folder name if needed.)
+   - Enter your password when prompted.
 
 ---
 
-### **Step 9: Register and Install the DKMS Driver**
+## Step 4: Install the Wi-Fi firmware
 
-```bash
-sudo dkms add .
-sudo dkms install ath11k-steamos/6.16-custom
-```
+1. **Create the firmware directory:**  
+   ```bash
+   mkdir -p firmware/QCA2066
+   ```
+
+2. **Download the required firmware files:**  
+   - Get **`board-2.bin`** (required) and **`firmware-2.bin`** (optional but recommended) for QCA2066.
+   - Download from [linux-firmware repo QCA2066 section](https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/ath11k/QCA2066/hw2.1).
+   - Save them in your Downloads folder.
+
+3. **Copy the firmware files:**  
+   ```bash
+   cp ~/Downloads/board-2.bin firmware/QCA2066/board-2.bin
+   cp ~/Downloads/firmware-2.bin firmware/QCA2066/firmware-2.bin
+   ```
+
+   - Ignore errors if `firmware-2.bin` is missing; only `board-2.bin` is required.
+
+4. **Run the post-install script to install the firmware:**  
+   ```bash
+   ./dkms-post-install.sh
+   ```
 
 ---
 
-### **Step 10: Install Firmware (if needed)**
+## Step 5: Enable the driver
 
-If you see errors about missing `board-2.bin` or WiFi doesn’t work, run:
-
-```bash
-git clone --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
-cp linux-firmware/ath11k/QCA2066/hw2.1/board-2.bin firmware/QCA2066/
-sudo ./install.sh
-```
-If you get a "git: command not found" error, install git:
-
-```bash
-sudo pacman -S git
-```
-
----
-
-### **Step 11: Reload the WiFi Driver**
+Reload the Wi-Fi modules to finish installation:
 
 ```bash
 sudo modprobe -r ath11k_pci ath11k || true
 sudo modprobe ath11k_pci
 ```
 
----
-
-### **Step 12: Confirm the Custom Driver is Loaded**
+**Optional:** Restart your Steam Deck to ensure everything loads.
 
 ```bash
-modinfo ath11k_pci | grep filename
-```
-You should see a path ending in `/updates/dkms/ath11k_pci.ko.zst`.  
-This means your custom DKMS driver is loaded.
-
----
-
-### **Step 13: (Optional) Check Driver Logs**
-
-```bash
-sudo dmesg | grep -i ath11k | tail
-```
-If there are no errors, you’re done!
-
----
-
-## After Installation
-
-- If you update your kernel or SteamOS, repeat Steps 6, 7, 9, and 11 to reinstall the driver.
-- To uninstall, run:
-```bash
-sudo dkms remove ath11k-steamos/6.16-custom --all
+reboot
 ```
 
 ---
 
 ## Troubleshooting
 
-- **Missing kernel headers:** Make sure the header package matches your kernel version from Step 6.
-- **Signature errors:** Repeat Steps 4 and 5.
-- **Folder not found:** Use `ls` to see folder names and double-check your path.
-- **Any error:** Copy the error message and ask in the Steam Deck forums or here on GitHub.
+- **Missing firmware error:**  
+  Make sure you downloaded and copied `board-2.bin` to `firmware/QCA2066/`.
+
+- **Wi-Fi not working after reboot:**  
+  Try reloading the module again:
+  ```bash
+  sudo modprobe -r ath11k_pci ath11k || true
+  sudo modprobe ath11k_pci
+  ```
+
+- **Not enough disk space:**  
+  Delete unnecessary files from `~/Downloads` or elsewhere.
+
+- **Still stuck?**  
+  [Open an issue](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/issues) and describe your problem.
 
 ---
 
-## Modern Suspend/Resume Workaround (Recommended)
+## Uninstalling
 
-If your WiFi drops or fails after sleep/wake, use this script to automatically unload and reload the driver, fixing Steam Deck reboot/wake issues.
-
-### **Step 1: Add the system-sleep script**
-
-Open Konsole and run:
+Remove the driver and firmware changes:
 
 ```bash
-sudo nano /usr/lib/systemd/system-sleep/ath11k-reload
-```
-
-Paste in:
-
-```bash
-#!/bin/bash
-case $1 in
-  pre)
-    logger "system-sleep: Unloading ath11k_pci before suspend"
-    modprobe -r ath11k_pci
-    ;;
-  post)
-    logger "system-sleep: Reloading ath11k_pci after resume"
-    modprobe ath11k_pci
-    ;;
-esac
-```
-
-Save (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
-Make it executable:
-
-```bash
-sudo chmod +x /usr/lib/systemd/system-sleep/ath11k-reload
+sudo dkms remove steamdeck-oled-ath11k-dkms/6.16-custom --all
 ```
 
 ---
 
-**No other workaround scripts or systemd services are needed!  
-Systemd will run this script automatically every time you suspend or resume.**
+## FAQ
+
+**Q: How do I open Konsole/Terminal?**  
+A: In Desktop Mode, click the launcher and search for "Konsole" or "Terminal".
+
+**Q: What if I don’t know my admin password?**  
+A: You set it during Steam Deck setup. If you forgot, you’ll need to reset it in SteamOS.
+
+**Q: Which firmware files do I need?**  
+A: `board-2.bin` is required. `firmware-2.bin` is optional for some advanced features.
+
+**Q: My Wi-Fi still doesn’t work after following all steps!**  
+A: Double-check all commands, ensure firmware files are in the right location, and reboot. If the problem persists, open a GitHub issue.
 
 ---
 
-### **How to Check if It's Working**
+## Credits
 
-After suspending and waking your Deck, check for log messages:
-
-```bash
-journalctl | grep system-sleep
-```
-
-You should see lines like:
-```
-system-sleep: Unloading ath11k_pci before suspend
-system-sleep: Reloading ath11k_pci after resume
-```
+Created by [WanderingxLotus](https://github.com/WanderingxLotus)  
+Thanks to everyone who tested and contributed!
 
 ---
-
-## How to Verify Your Custom Driver is Loaded
-
-Run:
-
-```bash
-modinfo ath11k_pci | grep filename
-```
-You should see:
-```
-filename: /lib/modules/<kernel-version>/updates/dkms/ath11k_pci.ko.zst
-```
-If so, your custom DKMS driver is active!
-
-Double-check with:
-
-```bash
-sudo dmesg | grep -i ath11k | tail
-dkms status
-```
-
----
-
-## License
-
-Driver source: original upstream Linux GPLv2. See LICENSE.  
-Firmware (if included): vendor license; review WHENCE before redistribution.
