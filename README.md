@@ -24,55 +24,6 @@ This package gives you a custom WiFi driver for your Steam Deck or SteamOS devic
 
 ---
 
-<<<<<<< HEAD
-## Installation Steps
-
-### **Step 1: Download the Tarball**
-
-Visit the [Releases page](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases) and download:
-```
-ath11k-steamos-dkms-6.16-custom.tar.gz
-```
-It will be in your **Downloads** folder:
-```
-/home/deck/Downloads
-```
-
----
-
-### **Step 2: Open Konsole**
-
-- Press the Steam button
-- Go to Power > Switch to Desktop
-- Open the start menu (bottom left), search "Konsole", and launch it
-
----
-
-### **Step 3: Make Your System Writable**
-
-```bash
-sudo steamos-readonly disable
-```
-If prompted for a password, type it and press Enter (if you never set one, just press Enter).
-
----
-
-### **Step 4: (First Time Only) Prepare the Package Manager**
-
-```bash
-sudo rm -rf /etc/pacman.d/gnupg
-sudo pacman-key --init
-sudo pacman-key --populate archlinux
-```
-
----
-
-### **Step 5: (First Time Only) Add the Package Signing Key**
-
-```bash
-sudo pacman-key --recv-key AF1D2199EF0A3CCF
-sudo pacman-key --lsign-key AF1D2199EF0A3CCF
-=======
 ## Kernel & Upstream Driver Version
 
 **This DKMS driver is based on upstream Linux kernel version 6.16.7 — commit [`131e2001572b`](https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/?id=131e2001572b).**
@@ -127,16 +78,10 @@ If prompted for a password, type it and press Enter (if you never set one, just 
 sudo rm -rf /etc/pacman.d/gnupg
 sudo pacman-key --init
 sudo pacman-key --populate archlinux
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
 ```
 
 ---
 
-<<<<<<< HEAD
-### **Step 6: Find Your Kernel Version**
-
-```bash
-=======
 ### **Step 5: (First Time Only) Add the Package Signing Key**
 
 ```bash
@@ -149,7 +94,6 @@ sudo pacman-key --lsign-key AF1D2199EF0A3CCF
 ### **Step 6: Find Your Kernel Version**
 
 ```bash
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
 uname -r
 ```
 Example output:  
@@ -264,16 +208,9 @@ sudo dkms remove ath11k-steamos/6.16-custom --all
 
 ---
 
-<<<<<<< HEAD
-## Suspend/Resume Workaround (Recommended)
-
-This script automatically unloads and reloads the WiFi driver when your Deck sleeps/wakes (instead of the previous workaround).  
-**It fixes WiFi and prevents full system reboot issues on sleep/wake.**
-=======
 ## Modern Suspend/Resume Workaround (Recommended)
 
 If your WiFi drops or fails after sleep/wake, use this script to automatically unload and reload the driver, fixing Steam Deck reboot/wake issues.
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
 
 ### **Step 1: Add the system-sleep script**
 
@@ -283,11 +220,7 @@ Open Konsole and run:
 sudo nano /usr/lib/systemd/system-sleep/ath11k-reload
 ```
 
-<<<<<<< HEAD
-Paste this in:
-=======
 Paste in:
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
 
 ```bash
 #!/bin/bash
@@ -320,11 +253,7 @@ Systemd will run this script automatically every time you suspend or resume.**
 
 ### **How to Check if It's Working**
 
-<<<<<<< HEAD
-Check for log messages:
-=======
 After suspending and waking your Deck, check for log messages:
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
 
 ```bash
 journalctl | grep system-sleep
@@ -364,12 +293,3 @@ dkms status
 
 Driver source: original upstream Linux GPLv2. See LICENSE.  
 Firmware (if included): vendor license; review WHENCE before redistribution.
-<<<<<<< HEAD
-
----
-
-## Need Help?
-
-If you get stuck, ask in the Steam Deck community or open an issue here!
-=======
->>>>>>> parent of d7b2e0c (Revise README for Steam Deck OLED ath11k driver)
