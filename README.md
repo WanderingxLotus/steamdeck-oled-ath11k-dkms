@@ -142,11 +142,3 @@ This repository contains code derived from the Linux kernel (GPL-2.0). See sourc
 
 Backport by: WanderingxLotus  
 Original ath11k driver: Qualcomm & Linux kernel community
-
----
-
-If you want, I can also:
-- produce a small one-line curl command to download the tarball/release, or
-- add a tiny Quick Install badge to the top of this README.
-
-Last updated: 2025-10-19
