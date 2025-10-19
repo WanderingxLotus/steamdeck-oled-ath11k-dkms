@@ -1,27 +1,12 @@
-# Kernel build / kbuild artifacts
 *.o
 *.ko
 *.mod
-*.mod.*
+*.mod.c
 *.symvers
 *.order
-*.cmd
+.tmp_versions/
+Module.markers
 modules.order
 Module.symvers
-*.tmp
-*.gcno
-*.gcda
-
-# DKMS build outputs
-*.zst
-
-# Archives / releases
-*.tar.gz
-*.tar.xz
-*.zip
-
-# Editors / misc
-*~
-*.swp
-.vscode/
-.idea/
+*.cmd
+src/*.ko

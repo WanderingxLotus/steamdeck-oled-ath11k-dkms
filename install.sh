@@ -1,31 +1,20 @@
 #!/bin/bash
-set -euo pipefail
-
-echo "[ath11k-steamos] Installing QCA2066 firmware blobs..."
-
-SRC_DIR="$(dirname "$0")/firmware/QCA2066"
-LOWER_DST="/lib/firmware/ath11k/qca2066/hw2.1"
-UPPER_DST="/lib/firmware/ath11k/QCA2066/hw2.1"
-
-if [[ ! -f "${SRC_DIR}/board-2.bin" ]]; then
-  echo "ERROR: Missing ${SRC_DIR}/board-2.bin"
+set -e
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root: sudo ./install.sh"
   exit 1
 fi
-
-sudo mkdir -p "${LOWER_DST}" "${UPPER_DST}"
-
-sudo install -m 0644 "${SRC_DIR}/board-2.bin" "${LOWER_DST}/board-2.bin"
-sudo install -m 0644 "${SRC_DIR}/board-2.bin" "${UPPER_DST}/board-2.bin"
-
-if [[ -f "${SRC_DIR}/firmware-2.bin" ]]; then
-  sudo install -m 0644 "${SRC_DIR}/firmware-2.bin" "${LOWER_DST}/firmware-2.bin"
-  sudo install -m 0644 "${SRC_DIR}/firmware-2.bin" "${UPPER_DST}/firmware-2.bin"
-fi
-
-# Legacy name
-sudo cp "${LOWER_DST}/board-2.bin" "${LOWER_DST}/board.bin"
-sudo cp "${UPPER_DST}/board-2.bin" "${UPPER_DST}/board.bin"
-
-echo "[ath11k-steamos] Done. Reload modules:"
-echo "  sudo modprobe -r ath11k_pci ath11k || true"
-echo "  sudo modprobe ath11k_pci"
+KERNEL=$(uname -r)
+echo "Building modules for kernel: $KERNEL"
+cd src
+make clean || true
+make -j"$(nproc)"
+mkdir -p /lib/modules/$KERNEL/extra/ath11k-backport
+cp *.ko /lib/modules/$KERNEL/extra/ath11k-backport/
+depmod -a
+# reload drivers
+modprobe -r ath11k_pci ath11k_ahb ath11k 2>/dev/null || true
+sleep 1
+modprobe ath11k
+modprobe ath11k_pci
+echo "Install complete. Check: ip link show | grep wlan"
