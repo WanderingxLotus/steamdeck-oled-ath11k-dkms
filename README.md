@@ -1,15 +1,15 @@
 # QCA2066 WiFi 6E Backport for Steam Deck OLED
 
-This project brings **WiFi 6E (6 GHz)** support to the Steam Deck OLED by backporting the QCA2066 (ath11k) driver from Linux 6.16 to the Steam Deck's 6.11-based kernels.
+This project enables **WiFi 6E (6 GHz)** on the Steam Deck OLED by backporting the QCA2066 (ath11k) driver from Linux 6.16 to the Steam Deck's 6.11-based kernel.
 
-> **Tested:** Steam Deck OLED, kernel 6.11.11-valve24-2-neptune-611  
-> **Enables:** QCA2066 WiFi 6E (PCI ID 17cb:1109)
+> **Latest Release:** [ath11k-6.16v2](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases/tag/ath11k-6.16v2)  
+> **Asset:** [steamdeck-qca2066-backport-v1.0.1.tar.gz](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases/download/ath11k-6.16v2/steamdeck-qca2066-backport-v1.0.1.tar.gz)
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Install Using the Latest Release
 
-### 1. Prepare Your System (one-time)
+### 1. Prepare Your Steam Deck
 
 ```bash
 sudo steamos-readonly disable
@@ -18,65 +18,34 @@ sudo pacman-key --populate archlinux holo
 sudo pacman -S --needed --noconfirm base-devel linux-headers
 ```
 
-### 2. Clone and Install
+### 2. Download and Extract the Release
+
+Go to the [latest release page](https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases/tag/ath11k-6.16v2) and download **steamdeck-qca2066-backport-v1.0.1.tar.gz**.
+
+Or via terminal:
 
 ```bash
-cd /home/deck/build
-git clone https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms.git
+cd ~/Downloads
+wget https://github.com/WanderingxLotus/steamdeck-oled-ath11k-dkms/releases/download/ath11k-6.16v2/steamdeck-qca2066-backport-v1.0.1.tar.gz
+tar xzvf steamdeck-qca2066-backport-v1.0.1.tar.gz
 cd steamdeck-oled-ath11k-dkms
+```
+
+### 3. Install the Driver
+
+```bash
 sudo ./install.sh
 ```
 
-**The installer will:**
-- Build the driver in `src/`
-- Copy `.ko` files to `/lib/modules/$(uname -r)/extra/ath11k-backport/`
+This will:
+- Build the driver from source (requires kernel headers)
+- Install the `.ko` modules to `/lib/modules/$(uname -r)/extra/ath11k-backport/`
 - Run `depmod -a`
-- Reload the ath11k modules
+- Reload the ath11k kernel modules
 
 ---
 
-## 🔧 Manual Build & Install (Advanced)
-
-```bash
-cd /home/deck/build/steamdeck-oled-ath11k-dkms/src
-
-# Optional: If your kernel headers are in a nonstandard location
-# export KDIR=/path/to/your/linux-headers
-
-make clean
-make -j"$(nproc)"
-
-sudo mkdir -p /lib/modules/"$(uname -r)"/extra/ath11k-backport
-sudo cp *.ko /lib/modules/"$(uname -r)"/extra/ath11k-backport/
-sudo depmod -a
-
-sudo modprobe -r ath11k_pci ath11k_ahb ath11k 2>/dev/null || true
-sudo modprobe ath11k
-sudo modprobe ath11k_pci
-```
-
----
-
-## 🧹 Uninstall / Revert
-
-```bash
-cd /home/deck/build/steamdeck-oled-ath11k-dkms
-sudo ./uninstall.sh
-```
-
-If uninstall.sh can’t find backups, manually:
-```bash
-sudo rm -f /lib/modules/"$(uname -r)"/extra/ath11k-backport/*.ko
-sudo depmod -a
-sudo modprobe -r ath11k_pci ath11k
-sudo modprobe ath11k_pci
-```
-
----
-
-## ✅ Verifying Your Install
-
-Run these to ensure the driver is loaded and the interface is up:
+## ✅ Verifying the Install
 
 ```bash
 sudo dmesg | tail -40 | grep -i ath11k
@@ -86,37 +55,45 @@ lsmod | grep ath11k
 ping -c 3 8.8.8.8
 ```
 
-You should see a `wlan` interface (`wlan1` etc.) and ath11k modules loaded.
+You should see a new `wlan` interface and ath11k modules loaded.
+
+---
+
+## 🧹 Uninstall
+
+```bash
+sudo ./uninstall.sh
+```
+
+If needed, manually remove with:
+
+```bash
+sudo rm -f /lib/modules/"$(uname -r)"/extra/ath11k-backport/*.ko
+sudo depmod -a
+sudo modprobe -r ath11k_pci ath11k
+sudo modprobe ath11k_pci
+```
 
 ---
 
 ## ❗ Troubleshooting
 
 - **Missing `/lib/modules/$(uname -r)/build` error:**  
-  Install the matching kernel headers, or set `KDIR` to your kernel header directory.
+  Install the matching kernel headers for your running kernel.
 
 - **Unknown symbol / unresolved symbol errors:**  
-  Double-check you’re building with the *exact* kernel headers for your running kernel. Rebuild and reinstall all `.ko` files, then `sudo depmod -a`.
+  Ensure you have the correct headers and rebuild the modules.
 
 - **Pacman key/auth errors:**  
-  Run `sudo pacman-key --init` and `sudo pacman-key --populate archlinux holo` as in the quick start.
+  See the preparation step above.
 
-- **Network not working after install:**  
-  Reboot, or reload modules:  
-  `sudo modprobe -r ath11k_pci ath11k && sudo modprobe ath11k && sudo modprobe ath11k_pci`  
-  Then check `ip link` and `dmesg`.
+- **Wi-Fi not working after install:**  
+  Try rebooting, or reload modules:
+  ```bash
+  sudo modprobe -r ath11k_pci ath11k && sudo modprobe ath11k && sudo modprobe ath11k_pci
+  ```
 
-- **Still stuck?**  
-  Please open an issue and include the output of `uname -r`, `lsmod | grep ath11k`, and any relevant `dmesg` lines.
-
----
-
-## 📁 Repo Contents
-
-- `src/` — driver source and Makefile
-- `install.sh` — build & install script
-- `uninstall.sh` — uninstall/revert script
-- `README.md` — this file
+Still having trouble? Open an issue and include `uname -r`, `lsmod | grep ath11k`, and any relevant `dmesg` lines.
 
 ---
 
