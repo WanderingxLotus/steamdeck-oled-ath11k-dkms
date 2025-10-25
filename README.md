@@ -92,7 +92,59 @@ sudo modprobe ath11k_pci
   ```bash
   sudo modprobe -r ath11k_pci ath11k && sudo modprobe ath11k && sudo modprobe ath11k_pci
   ```
+## Suspend/Resume Workaround for ath11k WiFi
 
+If you experience suspend/resume issues (broken sleep, WiFi not reconnecting, or kernel errors) with a custom ath11k DKMS driver, use the following workaround to unload/reload the driver automatically when the Deck suspends and resumes.
+
+Create a Systemd Sleep Hook
+
+Create the file `/lib/systemd/system-sleep/ath11k-fix.sh` with the following contents:
+
+```bash
+#!/bin/bash
+case $1/$2 in
+  pre/*)
+    modprobe -r ath11k_pci ath11k
+    ;;
+  post/*)
+    modprobe ath11k_pci ath11k
+    ;;
+esac
+```
+
+Make it executable:
+
+```sh
+sudo chmod +x /lib/systemd/system-sleep/ath11k-fix.sh
+```
+
+### How it Works
+
+- Before suspend, the script unloads the ath11k drivers.
+- After resume, it reloads the drivers.
+- This avoids firmware, PCIe, or WiFi lockups that can occur on suspend/wake.
+
+### Notes
+
+- After resume, WiFi may take a few seconds to reconnect.
+- NetworkManager or your wifi manager should reconnect automatically.
+- If WiFi does not reconnect, you can manually reload the driver:
+  ```sh
+  sudo modprobe -r ath11k_pci ath11k
+  sudo modprobe ath11k_pci ath11k
+  ```
+- For troubleshooting, check logs:
+  ```sh
+  dmesg | tail -100
+  ```
+
+---
+
+## Additional Information
+
+- This workaround is recommended for Steam Deck OLED and other devices using ath11k where suspend/resume is broken by the custom driver.
+- If you need to tweak the script for other modules or want more advanced sleep handling, see the [systemd documentation](https://www.freedesktop.org/software/systemd/man/systemd-sleep.html).
+  
 Still having trouble? Open an issue and include `uname -r`, `lsmod | grep ath11k`, and any relevant `dmesg` lines.
 
 ---
